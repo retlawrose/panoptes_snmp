@@ -32,3 +32,5 @@ docs/_build/
 # Tox files
 /.tox
 artifacts/
+
+venv/

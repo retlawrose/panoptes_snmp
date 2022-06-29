@@ -3,17 +3,14 @@ matrix:
   allow_failures:
     - os: osx
   include:
-    - name: "Python 2.7 on Xenial Linux"
-      python: 2.7
-      env: TOXENV=py27
-    - name: "Python 3.6 on Xenial Linux"
-      python: 3.6
-      env: TOXENV=py36
-    - name: "Python 2.7 on macOS"
+    - name: "Python 3.9 on Xenial Linux"
+      python: 3.9
+      env: TOXENV=py39
+    - name: "Python 3.9 on macOS"
       os: osx
-      osx_image: xcode11    # Python 2.7 running on macOS 10.14.4
+      osx_image: xcode13.1
       language: shell       # 'language: python' is an error on Travis CI macOS
-      env: TOXENV=py27
+      env: TOXENV=py39
 env:
 - LANG=en_US.UTF-8
 before_install:

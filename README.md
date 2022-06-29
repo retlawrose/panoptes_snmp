@@ -14,8 +14,8 @@
 
 ## Introduction
 
-This library, which is a fork of the excellent [EasySNMP library](https://github.com/kamakazikamikaze/easysnmp), provides a Pythonic wrapper
-on top of [Net-SNMP](http://www.net-snmp.org) C library. 
+This library, which is a fork of the excellent [EasySNMP library](https://github.com/kamakazikamikaze/easysnmp), 
+provides a Pythonic wrapper on top of [Net-SNMP](http://www.net-snmp.org) C library. 
 
 
 ## Background
@@ -69,13 +69,18 @@ def bulk_walk(self, oids, non_repeaters=0, max_repetitions=10):
 
 ## Contribute
 
-We welcome issues, questions, and pull requests - please have a look at [contributing](Contributing.md) to see how to do so.
+We welcome issues, questions, and pull requests - please have a look at [contributing](Contributing.md) to see how to 
+do so.
 
-## Maintainers
+## Author
 * Varun Varma: vvarun@oath.com
 
+## Maintainers
+* network-automation@verizonmedia.com
+
 ## License
-This project is licensed under the terms of the [BSD](LICENSE-BSD) open source license. Please refer to [LICENSE](LICENSE) for the full terms.
+This project is licensed under the terms of the [BSD](LICENSE-BSD) open source license. 
+Please refer to [LICENSE](LICENSE) for the full terms.
 
 ## Credits
 Please refer to the [CREDITS file](CREDITS.md) for a full list of credits.
