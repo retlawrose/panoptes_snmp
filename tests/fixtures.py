@@ -3,12 +3,8 @@ Copyright 2018, Oath Inc.
 Licensed under the terms of the BSD license. See LICENSE file in project root for terms.
 """
 
-from __future__ import unicode_literals
-
 import logging
-
 import pytest
-
 import yahoo_panoptes_snmp
 
 # Disable logging for the C interface
@@ -50,15 +46,21 @@ def sess_v3_args():
 
 
 @pytest.fixture
-def sess_v1():
-    return yahoo_panoptes_snmp.Session(**sess_v1_args())
+def sess_v1(sess_v1_args):
+    return yahoo_panoptes_snmp.Session(**sess_v1_args)
 
 
 @pytest.fixture
-def sess_v2():
-    return yahoo_panoptes_snmp.Session(**sess_v2_args())
+def sess_v2(sess_v2_args):
+    return yahoo_panoptes_snmp.Session(**sess_v2_args)
 
 
 @pytest.fixture
-def sess_v3():
-    return yahoo_panoptes_snmp.Session(**sess_v3_args())
+def sess_v3(sess_v3_args):
+    return yahoo_panoptes_snmp.Session(**sess_v3_args)
+
+
+@pytest.fixture
+def session_arguments(sess_v2_args, sess_v3_args):
+    session_arguments: list = [sess_v2_args, sess_v3_args]
+    return session_arguments

@@ -10,7 +10,7 @@ from subprocess import check_call
 from setuptools import setup, Extension
 from setuptools.command.test import test as TestCommand
 
-version = '0.2.5.121'
+version = '0.2.5.122'
 
 logger = logging.getLogger(__name__)
 
@@ -22,21 +22,19 @@ if PLATFORM not in ['darwin', 'linux']:
 MACHINE = platform.machine()
 BASEPATH = os.path.dirname(os.path.realpath(__file__))
 NETSNMP_NAME = 'net-snmp'
-NETSNMP_VERSION = '5.7.3'
+NETSNMP_VERSION = '5.9.1'
 NETSNMP_VERSIONED_NAME = '-'.join([NETSNMP_NAME, NETSNMP_VERSION])
 NETSNMP_SRC_PATH = os.path.join('src', NETSNMP_VERSIONED_NAME)
 NETSNMP_LIBS_PATH = os.path.join(NETSNMP_SRC_PATH, 'snmplib', '.libs')
 
 if PLATFORM == 'linux':
-    NETSNMP_SO_FILENAME = 'libnetsnmp.so.30.0.3'
-    NETSNMP_SO_TARGETS = ['libnetsnmp.so.30', 'libnetsnmp.so']
+    NETSNMP_SO_FILENAME = 'libnetsnmp.so.40.1.0'
+    NETSNMP_SO_TARGETS = ['libnetsnmp.so.40', 'libnetsnmp.so']
 else:
-    NETSNMP_SO_FILENAME = 'libnetsnmp.30.dylib'
-    NETSNMP_SO_TARGETS = ['libnetsnmp.30.dylib', 'libnetsnmp.dylib']
-
+    NETSNMP_SO_FILENAME = 'libnetsnmp.40.dylib'
+    NETSNMP_SO_TARGETS = ['libnetsnmp.40.dylib', 'libnetsnmp.dylib']
 
 NETSNMP_SO_PATH = os.path.join(NETSNMP_LIBS_PATH, NETSNMP_SO_FILENAME)
-
 
 libdirs = ['.']
 incdirs = ['{0}/include'.format(NETSNMP_SRC_PATH)]
@@ -44,6 +42,7 @@ extra_compile_args = ['-Wno-unused-function']
 extra_link_args = []
 
 openssl_gt_1_1_0 = False
+
 
 def set_openssl_version_flag(version):
     global openssl_gt_1_1_0
@@ -55,6 +54,7 @@ def set_openssl_version_flag(version):
                 openssl_gt_1_1_0 = True
     except:
         print('Error parsing OpenSSL version: {}'.format(version))
+
 
 if PLATFORM == 'darwin':
     extra_compile_args.append('-Wsometimes-uninitialized')
@@ -78,6 +78,12 @@ class PyTest(TestCommand):
     def initialize_options(self):
         TestCommand.initialize_options(self)
         self.pytest_args = []
+
+        from configparser import ConfigParser
+
+        config = ConfigParser()
+        config.read('pytest.ini')
+        self.pytest_args = config.get('pytest', 'addopts').split(' ')
 
     def finalize_options(self):
         TestCommand.finalize_options(self)
@@ -114,7 +120,7 @@ class BuildEasySNMPExt(build_ext):
 
     def run(self):
         def _patch():
-            if PLATFORM=="linux" and openssl_gt_1_1_0:
+            if PLATFORM == "linux" and openssl_gt_1_1_0:
                 print('>>>>>>>>>>> OpenSSL version > 1.1.0, checking if already patched')
                 patchcmd = ["patch", "-p1", "--ignore-whitespace"]
                 patchcheck = patchcmd + ["-N", "--dry-run", "--silent"]
@@ -134,7 +140,6 @@ class BuildEasySNMPExt(build_ext):
                 except CalledProcessError:
                     sys.exit('>>>>>>>>>>> OpenSSL version 1.1.0 patch failed, aborting')
 
-
         configureargs = "--with-defaults --with-default-snmp-version=2 --with-sys-contact=root@localhost " \
                         "--with-logfile=/var/log/snmpd.log " \
                         "--with-persistent-directory=/var/net-snmp --with-sys-location=unknown " \
@@ -143,7 +148,6 @@ class BuildEasySNMPExt(build_ext):
         featureflags = "--enable-reentrant --disable-debugging --disable-embedded-perl " \
                        "--without-perl-modules --enable-static=no --disable-snmpv1 --disable-applications " \
                        "--disable-manuals --with-libs=-lpthread"
-
 
         if PLATFORM == 'linux':
             configureargs += " --build={0}-unknown-linux-gnu --host={0}-unknown-linux-gnu ".format(MACHINE)
@@ -175,7 +179,6 @@ class BuildEasySNMPExt(build_ext):
         # https://jorgen.tjer.no/post/2014/05/20/dt-rpath-ld-and-at-rpath-dyld/
         if PLATFORM == 'darwin':
             for interface_so_path in self.get_outputs():
-
                 install_name_tool_cmd = [
                     'install_name_tool',
                     '-change',
@@ -191,7 +194,6 @@ setup(
     version=version,
     description='A Python wrapper on Net-SNMP',
     long_description=long_description,
-    long_description_content_type="text/markdown",
     author='Network Automation @ Verizon Media',
     author_email='network-automation@verizonmedia.com',
     url='https://github.com/yahoo/panoptes_snmp',

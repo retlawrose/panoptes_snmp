@@ -11,6 +11,7 @@
 .coverage
 nosetests.xml
 coverage.xml
+results.xml
 
 # Distribution & packaging
 /build/
@@ -34,3 +35,5 @@ docs/_build/
 artifacts/
 
 venv/
+vagrant_venv/
+.vagrant/

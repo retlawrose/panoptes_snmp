@@ -2,9 +2,6 @@
 Copyright 2018, Oath Inc.
 Licensed under the terms of the BSD license. See LICENSE file in project root for terms.
 """
-
-from __future__ import unicode_literals
-
 import platform
 import re
 
@@ -16,11 +13,11 @@ from yahoo_panoptes_snmp.exceptions import (
 )
 
 from yahoo_panoptes_snmp.session import Session
-from .fixtures import sess_v2, sess_v3
+from .fixtures import sess_v2, sess_v3, sess_v2_args, sess_v3_args
 from .helpers import snmp_set_via_cli
 
 
-@pytest.yield_fixture(autouse=True)
+@pytest.fixture
 def reset_values():
     snmp_set_via_cli('sysLocation.0', 'my original location', 's')
     snmp_set_via_cli('nsCacheTimeout.1.3.6.1.2.1.2.2', '0', 'i')
@@ -63,16 +60,15 @@ def test_session_invalid_port(version):
 
 # TODO: Determine how to test this more than once without a problem
 # @pytest.mark.parametrize('sess', [sess_v1(), sess_v2(), sess_v3()])
-@pytest.mark.parametrize('sess', [sess_v2()])
-def test_session_set_multiple_next(sess):
-    success = sess.set_multiple([
+def test_session_set_multiple_next(sess_v2):
+    success = sess_v2.set_multiple([
         ('.1.3.6.1.6.3.12.1.2.1.2.116.101.115.116', '.1.3.6.1.6.1.1'),
         ('.1.3.6.1.6.3.12.1.2.1.3.116.101.115.116', '1234'),
         ('.1.3.6.1.6.3.12.1.2.1.9.116.101.115.116', 4),
     ])
     assert success
 
-    res = sess.get_next([
+    res = sess_v2.get_next([
         'snmpTargetAddrTDomain', 'snmpTargetAddrTAddress',
         'snmpTargetAddrRowStatus'
     ])
@@ -95,12 +91,11 @@ def test_session_set_multiple_next(sess):
     assert res[2].snmp_type == 'INTEGER'
 
 
-@pytest.mark.parametrize('sess', [sess_v2(), sess_v3()])
-def test_session_set_clear(sess):
-    res = sess.set('.1.3.6.1.6.3.12.1.2.1.9.116.101.115.116', 6)
+def test_session_set_clear(sess_v2):
+    res = sess_v2.set('.1.3.6.1.6.3.12.1.2.1.9.116.101.115.116', 6)
     assert res == 1
 
-    res = sess.get_next([
+    res = sess_v2.get_next([
         'snmpTargetAddrTDomain', 'snmpTargetAddrTAddress',
         'snmpTargetAddrRowStatus'
     ])
@@ -123,9 +118,8 @@ def test_session_set_clear(sess):
     assert res[2].snmp_type == 'COUNTER'
 
 
-@pytest.mark.parametrize('sess', [sess_v2(), sess_v3()])
-def test_session_get(sess):
-    res = sess.get([
+def test_session_get(sess_v2):
+    res = sess_v2.get([
         ('sysUpTime', '0'),
         ('sysContact', '0'),
         ('sysLocation', '0')
@@ -149,10 +143,9 @@ def test_session_get(sess):
     assert res[2].snmp_type == 'OCTETSTR'
 
 
-@pytest.mark.parametrize('sess', [sess_v2(), sess_v3()])
-def test_session_get_use_numeric(sess):
-    sess.use_numeric = True
-    res = sess.get('sysContact.0')
+def test_session_get_use_numeric(sess_v2):
+    sess_v2.use_numeric = True
+    res = sess_v2.get('sysContact.0')
 
     assert res.oid == '.1.3.6.1.2.1.1.4'
     assert res.oid_index == '0'
@@ -160,10 +153,9 @@ def test_session_get_use_numeric(sess):
     assert res.snmp_type == 'OCTETSTR'
 
 
-@pytest.mark.parametrize('sess', [sess_v2(), sess_v3()])
-def test_session_get_use_sprint_value(sess):
-    sess.use_sprint_value = True
-    res = sess.get('sysUpTimeInstance')
+def test_session_get_use_sprint_value(sess_v2):
+    sess_v2.use_sprint_value = True
+    res = sess_v2.get('sysUpTimeInstance')
 
     assert res.oid == 'sysUpTimeInstance'
     assert res.oid_index == ''
@@ -171,10 +163,9 @@ def test_session_get_use_sprint_value(sess):
     assert res.snmp_type == 'TICKS'
 
 
-@pytest.mark.parametrize('sess', [sess_v2(), sess_v3()])
-def test_session_get_use_enums(sess):
-    sess.use_enums = True
-    res = sess.get('ifAdminStatus.1')
+def test_session_get_use_enums(sess_v2):
+    sess_v2.use_enums = True
+    res = sess_v2.get('ifAdminStatus.1')
 
     assert res.oid == 'ifAdminStatus'
     assert res.oid_index == '1'
@@ -182,9 +173,8 @@ def test_session_get_use_enums(sess):
     assert res.snmp_type == 'INTEGER'
 
 
-@pytest.mark.parametrize('sess', [sess_v2(), sess_v3()])
-def test_session_get_next(sess):
-    res = sess.get_next([
+def test_session_get_next(sess_v2):
+    res = sess_v2.get_next([
         ('sysUpTime', '0'),
         ('sysContact', '0'),
         ('sysLocation', '0')
@@ -208,46 +198,42 @@ def test_session_get_next(sess):
     assert res[2].snmp_type == 'TICKS'
 
 
-@pytest.mark.parametrize('sess', [sess_v2(), sess_v3()])
-def test_session_set(sess):
-    res = sess.get(('sysLocation', '0'))
+def test_session_set(sess_v2):
+    res = sess_v2.get(('sysLocation', '0'))
     assert res.value != 'my newer location'
 
-    success = sess.set(('sysLocation', '0'), 'my newer location')
+    success = sess_v2.set(('sysLocation', '0'), 'my newer location')
     assert success
 
-    res = sess.get(('sysLocation', '0'))
+    res = sess_v2.get(('sysLocation', '0'))
     assert res.value == 'my newer location'
 
 
-@pytest.mark.parametrize('sess', [sess_v2(), sess_v3()])
-def test_session_set_multiple(sess):
-    res = sess.get(['sysLocation.0', 'nsCacheTimeout.1.3.6.1.2.1.2.2'])
+def test_session_set_multiple(sess_v2):
+    res = sess_v2.get(['sysLocation.0', 'nsCacheTimeout.1.3.6.1.2.1.2.2'])
     assert res[0].value != 'my newer location'
     assert res[1].value != '160'
 
-    success = sess.set_multiple([
+    success = sess_v2.set_multiple([
         ('sysLocation.0', 'my newer location'),
         (('nsCacheTimeout', '.1.3.6.1.2.1.2.2'), 160),
     ])
     assert success
 
-    res = sess.get(['sysLocation.0', 'nsCacheTimeout.1.3.6.1.2.1.2.2'])
+    res = sess_v2.get(['sysLocation.0', 'nsCacheTimeout.1.3.6.1.2.1.2.2'])
     assert res[0].value == 'my newer location'
     assert res[1].value == '160'
 
 
-@pytest.mark.parametrize('sess', [sess_v2(), sess_v3()])
-def test_session_get_bulk(sess):  # noqa
-    if sess.version == 1:
+def test_session_get_bulk(sess_v2):  # noqa
+    if sess_v2.version == 1:
         with pytest.raises(EasySNMPError):
-            sess.get_bulk(
+            sess_v2.get_bulk(
                 ['sysUpTime', 'sysORLastChange', 'sysORID', 'sysORDescr',
-                 'sysORUpTime'],
-                2, 8
+                 'sysORUpTime'], 2, 8
             )
     else:
-        res = sess.get_bulk(
+        res = sess_v2.get_bulk(
             ['sysUpTime', 'sysORLastChange', 'sysORID', 'sysORDescr',
              'sysORUpTime'], 2, 8
         )
@@ -265,55 +251,50 @@ def test_session_get_bulk(sess):  # noqa
         assert res[4].snmp_type == 'TICKS'
 
 
-@pytest.mark.parametrize('sess', [sess_v2(), sess_v3()])
-def test_session_get_invalid_instance(sess):
-    # Sadly, SNMP v1 doesn't distuingish between an invalid instance and an
+def test_session_get_invalid_instance(sess_v2):
+    # Sadly, SNMP v1 doesn't distinguish between an invalid instance and an
     # invalid object ID, instead it excepts with noSuchName
-    if sess.version == 1:
+    if sess_v2.version == 1:
         with pytest.raises(EasySNMPNoSuchNameError):
-            sess.get('sysDescr.100')
+            sess_v2.get('sysDescr.100')
     else:
-        res = sess.get('sysDescr.100')
+        res = sess_v2.get('sysDescr.100')
         assert res.snmp_type == 'NOSUCHINSTANCE'
 
 
-@pytest.mark.parametrize('sess', [sess_v2(), sess_v3()])
-def test_session_get_invalid_instance_with_abort_enabled(sess):
-    # Sadly, SNMP v1 doesn't distuingish between an invalid instance and an
+def test_session_get_invalid_instance_with_abort_enabled(sess_v2):
+    # Sadly, SNMP v1 doesn't distinguish between an invalid instance and an
     # invalid object ID, instead it excepts with noSuchName
-    sess.abort_on_nonexistent = True
-    if sess.version == 1:
+    sess_v2.abort_on_nonexistent = True
+    if sess_v2.version == 1:
         with pytest.raises(EasySNMPNoSuchNameError):
-            sess.get('sysDescr.100')
+            sess_v2.get('sysDescr.100')
     else:
         with pytest.raises(EasySNMPNoSuchInstanceError):
-            sess.get('sysDescr.100')
+            sess_v2.get('sysDescr.100')
 
 
-@pytest.mark.parametrize('sess', [sess_v2(), sess_v3()])
-def test_session_get_invalid_object(sess):
-    if sess.version == 1:
+def test_session_get_invalid_object(sess_v2):
+    if sess_v2.version == 1:
         with pytest.raises(EasySNMPNoSuchNameError):
-            sess.get('iso')
+            sess_v2.get('iso')
     else:
-        res = sess.get('iso')
+        res = sess_v2.get('iso')
         assert res.snmp_type == 'NOSUCHOBJECT'
 
 
-@pytest.mark.parametrize('sess', [sess_v2(), sess_v3()])
-def test_session_get_invalid_object_with_abort_enabled(sess):
-    sess.abort_on_nonexistent = True
-    if sess.version == 1:
+def test_session_get_invalid_object_with_abort_enabled(sess_v2):
+    sess_v2.abort_on_nonexistent = True
+    if sess_v2.version == 1:
         with pytest.raises(EasySNMPNoSuchNameError):
-            sess.get('iso')
+            sess_v2.get('iso')
     else:
         with pytest.raises(EasySNMPNoSuchObjectError):
-            sess.get('iso')
+            sess_v2.get('iso')
 
 
-@pytest.mark.parametrize('sess', [sess_v2(), sess_v3()])
-def test_session_walk(sess):
-    res = sess.walk('system')
+def test_session_walk(sess_v2):
+    res = sess_v2.walk('system')
 
     assert len(res) >= 7
 
@@ -338,14 +319,13 @@ def test_session_walk(sess):
     assert res[5].snmp_type == 'OCTETSTR'
 
 
-@pytest.mark.parametrize('sess', [sess_v2(), sess_v3()])
-def test_session_walk_all(sess):
+def test_session_walk_all(sess_v2):
     # TODO: Determine why walking iso doesn't work for SNMP v1
-    if sess.version == 1:
+    if sess_v2.version == 1:
         with pytest.raises(EasySNMPNoSuchNameError):
-            sess.walk('.')
+            sess_v2.walk('.')
     else:
-        res = sess.walk('.')
+        res = sess_v2.walk('.')
 
         assert len(res) > 0
 
