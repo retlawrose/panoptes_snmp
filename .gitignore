@@ -6,6 +6,7 @@
 
 # Compiled libraries
 *.so
+*.so*
 
 # Nosetests and coverage information
 .coverage
