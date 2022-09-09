@@ -30,7 +30,7 @@ Vagrant.configure("2") do |config|
 
     # Should be able to run the build and tests with;
     # vagrant up
-    # vagrant login
-    # /panoptes_snmp/tox
+    # vagrant ssh
+    # ./panoptes_snmp/tox
   SHELL
 end

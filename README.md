@@ -9,6 +9,7 @@
 - [Background](#background)
 - [Install](#install)
 - [Usage](#usage)
+- [Testing](#testing)
 - [License](#license)
 - [Credits](#credits)
 
@@ -65,6 +66,17 @@ def bulk_walk(self, oids, non_repeaters=0, max_repetitions=10):
     :return: a list of SNMPVariable objects containing the values that
              were retrieved via SNMP
     """
+```
+
+## Testing
+
+Due to the variability of the Darwin platform, tests are skipped unless run on a Linux platform.  To this end
+a Vagrantfile has been supplied to provide a testing environment.
+
+```bash
+    vagrant up
+    vagrant ssh
+    ./panoptes_snmp/tox
 ```
 
 ## Contribute
